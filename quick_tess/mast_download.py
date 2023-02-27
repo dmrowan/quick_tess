@@ -80,7 +80,7 @@ def download(TIC=None, ra=None, dec=None,
             raise ValueError(
                     f'pipeline name {pipeline} not recognized')
 
-    return full_path
+    return tessutils.sort_paths(full_path)
 
 
 

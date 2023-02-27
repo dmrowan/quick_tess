@@ -12,6 +12,7 @@ import pickle
 import random
 from scipy import ndimage
 from scipy import signal
+from scipy import stats
 
 from . import data_parser
 from . import tessutils
@@ -403,6 +404,20 @@ class VariableStar:
                         marker=None,
                         color=[ color_dict[c] for c in np.tile(self.df[color_column], nphase) ],
                         **plot_kwargs)
+
+        #Plot binned LC (from Tharindu)
+        bins_ph=np.arange(-0.05,1.05,0.05) #bin the light curve in phase
+        bin_means, bin_edges, binnumber = stats.binned_statistic(
+                self.df.phase,self.df[yvals], statistic='median', bins=bins_ph) 
+        bin_std, bin_edges2, binnumber2 = stats.binned_statistic(
+                self.df.phase,self.df[yvals], statistic='std', bins=bins_ph)
+        bin_width = (bin_edges[1] - bin_edges[0])
+        bin_centers = bin_edges[1:] - bin_width/2
+        lcbin=pd.DataFrame({'phase':bin_centers,'yvals':bin_means,'errs':bin_std})
+
+        ax.errorbar(*tessutils.extend_phase(lcbin.phase, lcbin.yvals, nphase),
+                    yerr=tessutils.extend_phase(lcbin.phase, lcbin.errs, nphase)[1],
+                    marker='o', color='red', ls='')
 
         #Plot clipped points
         if not self.df_clipped.empty and plot_clipped:

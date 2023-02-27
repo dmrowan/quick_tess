@@ -6,6 +6,7 @@ from astropy.table import Table
 import os
 
 from tglc.quick_lc import tglc_lc
+from . import tessutils
 
 data_path = os.environ.get('QUICKTESS_DIR', None)
 
@@ -35,6 +36,8 @@ def download(TIC, verbose=True):
             sector=None,
             prior=None)  
 
-    return [ os.path.join(local_directory, 'lc', f) for f in 
-             os.listdir(os.path.join(local_directory, 'lc')) ]
+    paths = [ os.path.join(local_directory, 'lc', f) for f in 
+              os.listdir(os.path.join(local_directory, 'lc')) ]
+
+    return tessutils.sort_paths(paths)
 

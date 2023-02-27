@@ -13,7 +13,7 @@ desc="""
 Utility functions for quick_tess 
 """
 
-path_tup = namedtuple('path_tup', ['path', 'tic', 'sector', 'lctype'])
+path_tup = namedtuple('path_tup', ['path', 'tic', 'sector', 'lctype', 'gaia'])
 
 #Determine LCtype, sector tic from lc path
 def parse_path(lc_path):
@@ -23,16 +23,34 @@ def parse_path(lc_path):
         tic = int(os.path.split(lc_path)[-1].split('_')[4].split('-')[1])
         sector = int(os.path.split(
                 lc_path)[-1].split('_')[4].split('-')[0].lstrip('s'))
+        gaia = None
     elif 'hlsp_tess-spoc' in lc_path:
         lctype='spoc'
         tic = int(os.path.split(lc_path)[-1].split('_')[4].split('-')[0])
         sector = int(os.path.split(
                 lc_path)[-1].split('_')[4].split('-')[1].lstrip('s'))
+        gaia = None
+    elif 'hlsp_tglc_tess' in lc_path:
+        lctype = 'tglc'
+        tic = None
+        gaia = os.path.split(lc_path)[-1].split('_')[4].split('-')[2]
+        sector = int(os.path.split(lc_path)[-1].split('_')[4].split('-')[2].lstrip('s'))
     else:
-        print(lc_path)
-        raise ValueError('invalid lc path format')
+        raise ValueError(f'invalid lc path format {lc_path}')
 
-    return path_tup(lc_path, tic, sector, lctype)
+    return path_tup(lc_path, tic, sector, lctype, gaia)
+
+def sort_paths(paths):
+
+    if not check_iter(paths):
+        return paths
+
+    sectors = [ parse_path(p).sector for p in paths ]
+
+    df = pd.DataFrame({'path':paths, 'sector':sectors})
+    df = df.sort_values(by='sector', ascending=True).reset_index(drop=True)
+
+    return df.path.to_numpy()
 
 
 #Check if list tuple, np array, etc
