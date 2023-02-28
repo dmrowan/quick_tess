@@ -25,6 +25,8 @@ def plot(path, parser, savefig=None, parser_args=None,
         path = [ path ]
 
     vs = variablestar.VariableStar(path, parser=parser, parser_args=parser_args)
+    if vs.df.empty:
+        return
     if period is not None:
         vs.period = period
     else:
@@ -32,7 +34,7 @@ def plot(path, parser, savefig=None, parser_args=None,
 
     if len(path) == 1:
         
-        fig, ax = plt.subplots(1, 1, figsize=(12, 10))
+        fig, ax = plt.subplots(2, 1, figsize=(12, 10))
         fig.subplots_adjust(top=.98, right=.98)
         ax[0] = vs.plot_full(time_offset=2.45e6, ax=ax[0], plot_kwargs=dict(rasterized=True))
         ax[1] = vs.plot_lc(nphase=2, ax=ax[1], plot_kwargs=dict(rasterized=True))
@@ -63,6 +65,9 @@ def plot(path, parser, savefig=None, parser_args=None,
 
         for i in range(len(path)):
             vsi = variablestar.VariableStar(path[i], parser=parser, parser_args=parser_args)
+
+            if vsi.df.empty:
+                continue
 
             if period is not None:
                 vsi.period = period
