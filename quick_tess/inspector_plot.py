@@ -6,6 +6,7 @@ from matplotlib.gridspec import GridSpec
 import numpy as np
 import os
 import pandas as pd
+import pickle
 
 from . import data_parser
 from . import variablestar
@@ -18,11 +19,35 @@ desc="""
 Plot the sector-by-sector TESS LC
 """
 
-def plot(path, parser, savefig=None, parser_args=None, 
-         period=None, **kwargs):
+def plot(path, parser, parser_args=None, savefig=None,
+         period=None, double_period=True, period_pickle=None,
+         **kwargs):
+
+    '''
+    Make the inspector plot for a TESS lc
+
+    path (str or iterable) : path to TESS LC
+    parser : function to convert to "standard" form
+    parser_args : optional kwargs to pass to parser function
+    savefig : output fname
+    period : pass a period (skips Lomb Scargle period search)
+    double_period : double the period input by the LS (does nothing if period is not None)
+    period_pickle : output name to save periods to
+
+    kwargs : optional parameters to pass to periodogram call
+
+    returns list of periods
+    '''
     
     if not tessutils.check_iter(path):
         path = [ path ]
+
+    if double_period:
+        n = 2
+    else:
+        n = 1
+
+    period_dict = {}
 
     vs = variablestar.VariableStar(path, parser=parser, parser_args=parser_args)
     if vs.df.empty:
@@ -31,6 +56,7 @@ def plot(path, parser, savefig=None, parser_args=None,
         vs.period = period
     else:
         vs.ls_periodogram(**kwargs)
+        vs.phase_fold(n=n)
 
     if len(path) == 1:
         
@@ -42,6 +68,8 @@ def plot(path, parser, savefig=None, parser_args=None,
                    ha='right', va='center', fontsize=20,
                    transform=ax[1].transAxes,
                    bbox=dict(edgecolor='black', facecolor='white'))
+
+        period_dict[vs.df.sector.iloc[0]] = vs.period
 
     else:
         
@@ -62,6 +90,7 @@ def plot(path, parser, savefig=None, parser_args=None,
                  transform=ax1.transAxes,
                  bbox=dict(edgecolor='black', facecolor='white'))
 
+        period_dict['all'] = vs.period
 
         for i in range(len(path)):
             vsi = variablestar.VariableStar(path[i], parser=parser, parser_args=parser_args)
@@ -73,6 +102,9 @@ def plot(path, parser, savefig=None, parser_args=None,
                 vsi.period = period
             else:
                 vsi.ls_periodogram(**kwargs)
+                vsi.phase_fold(n=n)
+
+            period_dict[vsi.df.sector.iloc[i]] = vsi.period
 
             axi = plt.Subplot(fig, gs[i+2])
             axi = vsi.plot_lc(nphase=2, ax=axi, plot_kwargs=dict(rasterized=True))
@@ -86,3 +118,10 @@ def plot(path, parser, savefig=None, parser_args=None,
         plt.show()
     else:
         fig.savefig(savefig, dpi=300)
+
+    if period_pickle is not None:
+        
+        with open(period_pickle, 'wb') as p:
+            pickle.dump(period_dict, p)
+
+    return period_dict
