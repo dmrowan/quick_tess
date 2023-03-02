@@ -853,6 +853,13 @@ class VariableStar:
 
         return df_out
 
+    def output_full_lightcurve(self, outfile):
+        
+        if outfile is not None:
+            self.df.to_csv(outfile, index=False)
+
+        return self.df
+		
     #Save to pickle
     def to_pickle(self, out):
         with open(out, 'wb') as p:
