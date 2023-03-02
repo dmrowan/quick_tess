@@ -19,7 +19,7 @@ desc="""
 Plot the sector-by-sector TESS LC
 """
 
-def plot(path, parser, parser_args=None, savefig=None,
+def plot(path, parser, parser_args=None, savefig=None, savelc=None,
          period=None, double_period=True, period_pickle=None,
          **kwargs):
 
@@ -30,6 +30,7 @@ def plot(path, parser, parser_args=None, savefig=None,
     parser : function to convert to "standard" form
     parser_args : optional kwargs to pass to parser function
     savefig : output fname
+    savelc: output LC in a format suitable for Period04
     period : pass a period (skips Lomb Scargle period search)
     double_period : double the period input by the LS (does nothing if period is not None)
     period_pickle : output name to save periods to
@@ -123,5 +124,8 @@ def plot(path, parser, parser_args=None, savefig=None,
         
         with open(period_pickle, 'wb') as p:
             pickle.dump(period_dict, p)
-
+     
     return period_dict
+
+    if savelc is not None:
+                  vs.to_period04_format(savelc)
