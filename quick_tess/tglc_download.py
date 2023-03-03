@@ -19,25 +19,33 @@ desc="""
 Download data for a TIC using TGLC
 """
 
-def download(TIC, verbose=True):
+def download(TIC, verbose=True, **kwargs):
 
     
     target = f'TIC {TIC}'
     local_directory = os.path.join(data_path, f'{TIC}_tglc/')
     os.makedirs(local_directory, exist_ok=True)
 
+    kwargs.setdefault('size', 90)
+    kwargs.setdefault('save_aper', False)
+    kwargs.setdefault('limit_mag', 16)
+    kwargs.setdefault('get_all_lc', False)
+    kwargs.setdefault('first_sector_only', False)
+    kwargs.setdefault('sector', None)
+    kwargs.setdefault('prior', None)
+
     tglc_lc(target=target, 
             local_directory=local_directory, 
-            size=90, 
-            save_aper=False,
-            limit_mag=16,
-            get_all_lc=False,
-            first_sector_only=False,
-            sector=None,
-            prior=None)  
+            **kwargs)
 
     paths = [ os.path.join(local_directory, 'lc', f) for f in 
               os.listdir(os.path.join(local_directory, 'lc')) ]
 
-    return tessutils.sort_paths(paths)
+    paths = tessutils.sort_paths(paths)
+
+    if len(paths) > 1 and (kwargs['sector'] is not None):
+        return [ p for p in paths if tessutils.parse_path(p).sector == kwargs['sector'] ][0]
+    else:
+        return paths
+        
 
