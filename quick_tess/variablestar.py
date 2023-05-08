@@ -26,7 +26,6 @@ Basic variable star class for quick_tess
 
 colors = ['#DE1509', '#C9189E', '#AA2AFA', '#3524D1', '#1D73F2']
 
-
 class VariableStar:
 
     def __init__(self, datafile,
@@ -55,7 +54,7 @@ class VariableStar:
         except:
             self.timecol = self.df.columns[0]
 
-        self.t0 = None
+        self._t0 = None
         self.df_clipped = pd.DataFrame(columns=self.df.columns)
         self.df_clipped['clipped_by'] = None
         self.scatter_color = 'black'
@@ -107,8 +106,12 @@ class VariableStar:
                        plot=False, ax=None, savefig=None,
                        plot_kwargs=None):
 
+        #Create astropy LS periodogram
+
         ls = LombScargle(self.df[self.timecol], self.df[yvals])
         fal = ls.false_alarm_level(1e-5)
+
+        #Use autofrequeny grid over specified range
         self.ls_freq, self.ls_power = ls.autopower(
                 minimum_frequency=minimum_frequency,
                 maximum_frequency=maximum_frequency,
@@ -122,6 +125,8 @@ class VariableStar:
                                   ignore_index=True)
 
         self.df_ls = df_ls
+
+        #Select the period corresponding to the highest peak in the periodogram
         self.period = np.power(df_ls.freq.iloc[np.argmax(df_ls.power)], -1)
 
         if (plot) or (savefig is not None) or (ax is not None):
@@ -144,8 +149,6 @@ class VariableStar:
             ax.plot(self.ls_freq, self.ls_power, **plot_kwargs)
 
             return plotutils.plt_return(created_fig, fig, ax, savefig)
-
-        return self.period
 
         return self.period
 
@@ -434,20 +437,8 @@ class VariableStar:
                         self.df_clipped[phase_column], self.df_clipped[yvals],nphase),
                            color='gray', alpha=0.8, marker=plot_kwargs['marker'])
 
-            
-            """
-            extended_phase_clipped = []
-            for i in range(nphase):
-                p = [x+i for x in self.df_clipped[phase_column]]
-                extended_phase_clipped.extend(p)
-            ylim =ax.get_ylim()
-            ax.scatter(extended_phase_clipped,
-                       np.tile(self.df_clipped[yvals], nphase),
-                       color='gray', label='clipped')
-            ax.set_ylim(ylim)
-            """
-
         ax.set_xlabel('Phase', fontsize=20)
+
         if (not self.df.empty) and ('filter' in self.df.columns):
             filt = tessutils.filter_format(self.df['filter'].value_counts().index[0])
             ax.set_ylabel(f'{filt} Mag', fontsize=20)
@@ -466,7 +457,6 @@ class VariableStar:
                 ax.set_xlim(current_xlim)
                 ax.set_ylim(current_ylim)
             ax.legend(loc='upper right', edgecolor='black', fontsize=15)
-            
 
         elif label_period:
             current_ylim = ax.get_ylim()
