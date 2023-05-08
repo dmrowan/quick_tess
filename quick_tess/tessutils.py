@@ -161,3 +161,17 @@ def filter_format(s):
 #requires nparrays
 def compute_chi2(yvals, ymodel, yerr):
     return np.sum( (yvals-ymodel)**2 / (yerr**2))
+
+def find_runs(lst):
+    runs = []
+    run = []
+    for i in range(len(lst)):
+        if i == 0 or lst[i] != lst[i-1] + 1:
+            if len(run) > 1:
+                runs.append(run)
+            run = []
+        run.append(i)
+    if len(run) > 1:
+        runs.append(run)
+    return runs
+

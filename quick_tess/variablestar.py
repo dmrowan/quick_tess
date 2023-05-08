@@ -254,6 +254,7 @@ class VariableStar:
         return plotutils.plt_return(created_fig, fig, ax, savefig)
 
     def plot_broken(self, fig=None, gs=None, savefig=None, xlims=None,
+                    combine_adjacent_sectors=False,
                     plot_kwargs=None, yvals='mag', time_offset=0):
 
         if plot_kwargs is None:
@@ -275,6 +276,25 @@ class VariableStar:
                                 np.unique(self.df.sector.to_numpy())) ]
             else:
                 xlims=None
+
+        if combine_adjacent_sectors:
+            sector_list = np.sort(np.unique(self.df.sector.to_numpy()))
+
+            runs = tessutils.find_runs(sector_list)
+
+            xlims_new = []
+            for i in range(len(xlims)):
+                
+                if i not in [ item for sublist in runs for item in sublist ]:
+                    xlims_new.append(xlims[i])
+                else:
+                    run = [r for r in runs if i in r][0]
+                    if i == run[0]:
+                        xlims_new.append( (xlims[i][0], xlims[run[-1]][1]) )
+                    else:
+                        continue
+            
+            xlims = xlims_new
 
         
         if fig is None:
@@ -313,7 +333,7 @@ class VariableStar:
             return bax
 
     def plot_lc(self, nphase=2, ax=None, savefig=None, 
-                phase_column='phase',
+                phase_column='phase', plot_binned=True,
                 color_column=None, color_dict=None,
                 legend=False, title=False, plot_kwargs=None,
                 label_period=True, plot_clipped=True,
@@ -345,41 +365,18 @@ class VariableStar:
         if created_fig:
             fig.subplots_adjust(top=.98, right=.98)
 
-        if color_column=='camera':
-            self.split_camera()
-            colors = plotutils.camera_colors()
-            for i in range(len(list(self.df_cam_dict.keys()))):
-
-                k = list(self.df_cam_dict.keys())[i]
-                color = colors[i]
-
-                #Extend Lc to multiple phases
-                extended_phase = []
-                for i in range(nphase):
-                    p = [ x + i for x in self.df_cam_dict[k][phase_column] ]
-                    extended_phase.extend(p)
-
-                if errorbar:
-                    ax.errorbar(extended_phase,
-                                np.tile(self.df_cam_dict[k][yvals],nphase),
-                                yerr=np.tile(self.df_cam_dict[k][yerr],nphase),
-                                label=k, color=color, **plot_kwargs)
-                else:
-                    ax.scatter(extended_phase,
-                               np.tile(self.df_cam_dict[k][yvals],nphase),
-                               label=k, color=color, **plot_kwargs)
-        elif color_column is None:
+        if color_column is None:
             if errorbar:
-                if 'color' not in list(plot_kwargs.keys()):
-                    plot_kwargs['color'] = self.scatter_color
+                if 'c' not in list(plot_kwargs.keys()):
+                    plot_kwargs.setdefault('color', self.scatter_color)
                 ax.errorbar(
                         *tessutils.extend_phase(self.df[phase_column], self.df[yvals], nphase),
                         yerr=tessutils.extend_phase(
                                 self.df[phase_column], self.df[yerr], nphase)[1],
                          **plot_kwargs)
             else:
-                if 'color' not in list(plot_kwargs.keys()):
-                    plot_kwargs['color'] = self.scatter_color
+                if 'c' not in list(plot_kwargs.keys()):
+                    plot_kwargs.setdefault('color', self.scatter_color)
                 ax.scatter(
                         *tessutils.extend_phase(
                                 self.df[phase_column], 
@@ -406,18 +403,19 @@ class VariableStar:
                         **plot_kwargs)
 
         #Plot binned LC (from Tharindu)
-        bins_ph=np.arange(-0.05,1.05,0.05) #bin the light curve in phase
-        bin_means, bin_edges, binnumber = stats.binned_statistic(
-                self.df.phase,self.df[yvals], statistic='median', bins=bins_ph) 
-        bin_std, bin_edges2, binnumber2 = stats.binned_statistic(
-                self.df.phase,self.df[yvals], statistic='std', bins=bins_ph)
-        bin_width = (bin_edges[1] - bin_edges[0])
-        bin_centers = bin_edges[1:] - bin_width/2
-        lcbin=pd.DataFrame({'phase':bin_centers,'yvals':bin_means,'errs':bin_std})
+        if plot_binned:
+            bins_ph=np.arange(-0.05,1.05,0.05) #bin the light curve in phase
+            bin_means, bin_edges, binnumber = stats.binned_statistic(
+                    self.df.phase,self.df[yvals], statistic='median', bins=bins_ph) 
+            bin_std, bin_edges2, binnumber2 = stats.binned_statistic(
+                    self.df.phase,self.df[yvals], statistic='std', bins=bins_ph)
+            bin_width = (bin_edges[1] - bin_edges[0])
+            bin_centers = bin_edges[1:] - bin_width/2
+            lcbin=pd.DataFrame({'phase':bin_centers,'yvals':bin_means,'errs':bin_std})
 
-        ax.errorbar(*tessutils.extend_phase(lcbin.phase, lcbin.yvals, nphase),
-                    yerr=tessutils.extend_phase(lcbin.phase, lcbin.errs, nphase)[1],
-                    marker='o', color='red', ls='')
+            ax.errorbar(*tessutils.extend_phase(lcbin.phase, lcbin.yvals, nphase),
+                        yerr=tessutils.extend_phase(lcbin.phase, lcbin.errs, nphase)[1],
+                        marker='o', color='red', ls='')
 
         #Plot clipped points
         if not self.df_clipped.empty and plot_clipped:
@@ -470,8 +468,6 @@ class VariableStar:
             ax.legend(loc='upper right', edgecolor='black', fontsize=15)
             
 
-        if title:
-            ax.set_title(self.title, fontsize=15)
         elif label_period:
             current_ylim = ax.get_ylim()
             ylim_range = current_ylim[0]-current_ylim[1]
@@ -510,7 +506,6 @@ class VariableStar:
             self.df_clipped = pd.concat([self.df_clipped, df_clipped]).reset_index(
                     drop=True)
             self.df = self.df.iloc[idx_keep,].reset_index(drop=True)
-            self.split_camera()
         else:
             self.df_clipped=pd.DataFrame(columns=self.df.columns)
 
@@ -611,7 +606,6 @@ class VariableStar:
             self.df_clipped = pd.concat([self.df_clipped, df_clipped]).reset_index(drop=True)
             self.df = df_sorted.iloc[idx_keep,].reset_index(drop=True)
 
-            self.split_camera()
         else: #creat empty dataframe
             self.df = df_sorted.reset_index(drop=True)
             self._used_rolling_std=False
@@ -654,7 +648,6 @@ class VariableStar:
             ax.set_xlabel("Phase", fontsize=20)
             ax.set_ylabel("Mag", fontsize=20)
             ax.legend(fontsize=15, edgecolor='black', loc='upper right')
-            ax.set_title(self.title, fontsize=15)
 
             return plotutils.plt_return(created_fig, fig, ax, savefig)
 
