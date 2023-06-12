@@ -78,10 +78,13 @@ def tess_qlp(datafile_list, ksp=False):
             df = df[~np.isnan(df['mag'])]
             df['mag_err'] = abs((-2.5*np.log10(np.e))*(df.KSPSAP_FLUX_ERR/df.KSPSAP_FLUX))
         else:
-            df['mag'] = -2.5*np.log10(df.SAP_FLUX)
-            df['mag'] = df['mag'] + (tess_mag - df.mag.median())
-            df = df[~np.isnan(df['mag'])]
-            df['mag_err'] = abs((-2.5*np.log10(np.e))*(df.KSPSAP_FLUX_ERR/df.SAP_FLUX))
+            try:
+                df['mag'] = -2.5*np.log10(df.SAP_FLUX)
+                df['mag'] = df['mag'] + (tess_mag - df.mag.median())
+                df = df[~np.isnan(df['mag'])]
+                df['mag_err'] = abs((-2.5*np.log10(np.e))*(df.KSPSAP_FLUX_ERR/df.SAP_FLUX))
+            except:
+                continue
 
         df['orbit'] = df.ORBITID
         df['sector'] = tessutils.parse_path(datafile).sector
@@ -99,8 +102,11 @@ def tess_qlp(datafile_list, ksp=False):
         df_list.append(df)
 
 
-    df_out = pd.concat(df_list)
-    df_out = df_out.reset_index(drop=True)
+    if len(df_list):
+        df_out = pd.concat(df_list)
+        df_out = df_out.reset_index(drop=True)
+    else:
+        df_out = pd.DataFrame()
 
     return df_out
 

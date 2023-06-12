@@ -2,8 +2,10 @@
 
 from collections import namedtuple
 import os
+import numba
 import numpy as np
 import pandas as pd
+from tqdm import tqdm
 import sys
 
 
@@ -174,4 +176,36 @@ def find_runs(lst):
     if len(run) > 1:
         runs.append(run)
     return runs
+
+@numba.jit(nopython=True)
+def pdm_evaluate(times, yvals, period):
+    
+    phase = np.mod(times, period)/period
+
+    bins = np.arange(-0.05, 1.05, 0.05)
+
+    bin_numbers = np.digitize(phase, bins)
+    bin_stds = np.zeros(len(bins)-1)
+
+    for i in range(1, len(bins)):
+        bin_data = yvals[bin_numbers == i]
+        if len(bin_data):
+            bin_stds[i-1] = np.std(bin_data)
+        else:
+            bin_stds[i-1] = 0
+
+    variance = np.sum(np.power(bin_stds,2))
+
+    return variance
+
+def pdm(times, yvals, period_arr):
+    
+    t0 = np.min(times)
+    times = times-t0
+
+    variance = np.zeros(len(period_arr))
+    for i in tqdm(range(len(period_arr))):
+        variance[i] = pdm_evaluate(times, yvals, period_arr[i])
+
+    return variance
 
