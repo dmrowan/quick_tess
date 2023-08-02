@@ -152,6 +152,32 @@ class VariableStar:
 
         return self.period
 
+    def pdm(self, prange=0.1, period=None, niters=100000,
+            plot=False, ax=None, savefig=None):
+        
+        if period is None:
+            period = self.period
+
+        period_arr = np.linspace(period-prange, period+prange, niters)
+
+        variances = tessutils.pdm(self.df[self.timecol].to_numpy(), 
+                                  self.df.mag.to_numpy(),
+                                  period_arr)
+
+        self.period = period_arr[np.argmin(variances)]
+
+        if (plot) or (ax is not None) or (savefig is not None):
+            
+            fig, ax, created_fig = plotutils.fig_init(ax=ax, figsize=(8,4))
+            if created_fig:
+                fig.subplots_adjust(top=.98, right=.98)
+            ax.plot(period_arr, variances, color='black', ls='-', lw=2, zorder=2)
+            ax.set_xlabel('Period (d)', fontsize=20)
+            ax.set_ylabel(r'$\sigma_m^2$ (mag)', fontsize=20)
+            ax.axvline(self.period, ls='--', lw=1, color='xkcd:red', zorder=1)
+
+            return plotutils.plt_return(created_fig, fig, ax, savefig)
+
     @property
     def is_phase_folded(self):
         return 'phase' in self.df.columns
