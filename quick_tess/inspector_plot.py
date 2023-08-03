@@ -21,6 +21,7 @@ Plot the sector-by-sector TESS LC
 
 def plot(path, parser, parser_args=None, savefig=None, savelc=None,
          period=None, double_period=True, period_pickle=None,
+         pdm=False,
          **kwargs):
 
     '''
@@ -57,6 +58,8 @@ def plot(path, parser, parser_args=None, savefig=None, savelc=None,
         vs.period = period
     else:
         vs.ls_periodogram(**kwargs)
+        if pdm:
+            vs.pdm()
         vs.phase_fold(n=n)
 
     if len(path) == 1:
@@ -103,6 +106,8 @@ def plot(path, parser, parser_args=None, savefig=None, savelc=None,
                 vsi.period = period
             else:
                 vsi.ls_periodogram(**kwargs)
+                if pdm:
+                    vsi.pdm()
                 vsi.phase_fold(n=n)
 
             period_dict[vsi.df.sector.iloc[i]] = vsi.period

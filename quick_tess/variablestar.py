@@ -152,7 +152,7 @@ class VariableStar:
 
         return self.period
 
-    def pdm(self, prange=0.1, period=None, niters=100000,
+    def pdm(self, prange=0.1, period=None, niters=10000,
             plot=False, ax=None, savefig=None):
         
         if period is None:
