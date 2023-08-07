@@ -45,7 +45,7 @@ def download(TIC=None, ra=None, dec=None,
                 print(obs_table['obs_id'][idx[i]])
                 full_path.append(
                         os.path.join(
-                                asassn_config.tessdir.tess_cache, 
+                                data_path,
                                 'mastDownload/HLSP', 
                                 obs_table['obs_id'][idx[i]],
                                 obs_table['obs_id'][idx[i]]+'.fits'))
