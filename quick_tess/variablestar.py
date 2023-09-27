@@ -153,7 +153,7 @@ class VariableStar:
         return self.period
 
     def pdm(self, prange=0.1, period=None, niters=10000,
-            plot=False, ax=None, savefig=None):
+            plot=False, ax=None, savefig=None, progress=True):
         
         if period is None:
             period = self.period
@@ -162,7 +162,7 @@ class VariableStar:
 
         variances = tessutils.pdm(self.df[self.timecol].to_numpy(), 
                                   self.df.mag.to_numpy(),
-                                  period_arr)
+                                  period_arr, progress=progress)
 
         self.period = period_arr[np.argmin(variances)]
 

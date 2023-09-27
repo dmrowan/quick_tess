@@ -82,7 +82,10 @@ def tess_qlp(datafile_list, ksp=False):
                 df['mag'] = -2.5*np.log10(df.SAP_FLUX)
                 df['mag'] = df['mag'] + (tess_mag - df.mag.median())
                 df = df[~np.isnan(df['mag'])]
-                df['mag_err'] = abs((-2.5*np.log10(np.e))*(df.KSPSAP_FLUX_ERR/df.SAP_FLUX))
+                if 'KSPSAP_FLUX_ERR' in df.columns:
+                    df['mag_err'] = abs((-2.5*np.log10(np.e))*(df.KSPSAP_FLUX_ERR/df.SAP_FLUX))
+                else:
+                    df['mag_err'] = 1e-4 #new QLP light curves dont have KSP column
             except:
                 continue
 

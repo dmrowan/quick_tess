@@ -198,13 +198,17 @@ def pdm_evaluate(times, yvals, period):
 
     return variance
 
-def pdm(times, yvals, period_arr):
+def pdm(times, yvals, period_arr, progress=True):
     
     t0 = np.min(times)
     times = times-t0
 
     variance = np.zeros(len(period_arr))
-    for i in tqdm(range(len(period_arr))):
+    if progress:
+        iterable = tqdm(range(len(period_arr)))
+    else:
+        iterable = range(len(period_arr))
+    for i in iterable:
         variance[i] = pdm_evaluate(times, yvals, period_arr[i])
 
     return variance
