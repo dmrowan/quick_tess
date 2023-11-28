@@ -515,7 +515,7 @@ class VariableStar:
             idx_keep = np.where(~to_clip)[0]
 
             if self._verbose:
-                log.info(f"{self.id}: {len(idx_clip)} points sigma-clipped")
+                log.info(f"{len(idx_clip)} points sigma-clipped")
 
             df_clipped = self.df.iloc[idx_clip,].copy()
             df_clipped['clipped_by'] = 'sigma_clip'
@@ -614,7 +614,7 @@ class VariableStar:
                 self._used_rolling_std = False
 
             if self._verbose:
-                log.info(f"{self.id}: {len(idx_clip)} points clipped using median filter")
+                log.info(f"{len(idx_clip)} points clipped using median filter")
 
             #Applying clipping to data
             df_clipped = df_sorted.iloc[idx_clip,].copy()
