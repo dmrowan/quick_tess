@@ -373,9 +373,11 @@ class VariableStar:
 
         plot_kwargs.setdefault('marker', '.')
         plot_kwargs.setdefault('alpha', 0.6)
-        plot_kwargs.setdefault('edgecolor', 'none')
         if errorbar:
             plot_kwargs.setdefault('ls', '')
+            plot_kwargs.setdefault('markeredgecolor', 'none')
+        else:
+            plot_kwargs.setdefault('edgecolor', 'none')
         if 'phase' not in self.df.columns:
             self.phase_fold()
 
