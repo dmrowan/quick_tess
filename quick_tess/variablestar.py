@@ -467,11 +467,14 @@ class VariableStar:
 
         ax.set_xlabel('Phase', fontsize=20)
 
+        """
         if (not self.df.empty) and ('filter' in self.df.columns):
             filt = tessutils.filter_format(self.df['filter'].value_counts().index[0])
             ax.set_ylabel(f'{filt} Mag', fontsize=20)
         else:
             ax.set_ylabel('Mag', fontsize=20)
+        """
+        ax.set_ylabel(plotutils.format_latex_label(yvals), fontsize=20)
 
         if not ax.yaxis_inverted() and 'flux' not in yvals:
             ax.invert_yaxis()

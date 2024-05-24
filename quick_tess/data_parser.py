@@ -113,7 +113,7 @@ def tess_qlp(datafile_list, ksp=False):
 
     return df_out
 
-def tess_tglc(datafile_list):
+def tess_tglc(datafile_list, which='cal_psf_flux'):
     
     if not tessutils.check_iter(datafile_list):
         datafile_list = [datafile_list]
@@ -129,7 +129,7 @@ def tess_tglc(datafile_list):
         df['filter'] = 'T'
         df['hjd'] = df.time + 2457000
 
-        df['mag'] = -2.5*np.log10(df.cal_psf_flux)
+        df['mag'] = -2.5*np.log10(df[which])
         df['mag'] = df['mag'] + (tess_mag - df.mag.median())
         df = df[~np.isnan(df.mag)].reset_index(drop=True)
         df['mag_err'] = 0.01

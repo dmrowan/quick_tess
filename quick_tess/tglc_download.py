@@ -8,10 +8,6 @@ import os
 from tglc.quick_lc import tglc_lc
 from . import tessutils
 
-data_path = os.environ.get('QUICKTESS_DIR', None)
-
-if data_path is None:
-    print("Please set the QUICKTESS_DIR environment variable to path ot the downloaded data")
 
 #Dom Rowan 2023
 
@@ -19,11 +15,18 @@ desc="""
 Download data for a TIC using TGLC
 """
 
-def download(TIC, verbose=True, **kwargs):
+def download(TIC, verbose=True, savedir=None, **kwargs):
 
     
     target = f'TIC {TIC}'
-    local_directory = os.path.join(data_path, f'{TIC}_tglc/')
+    
+    if savedir is None:
+        savedir = os.environ.get('QUICKTESS_DIR', None)
+        if savedir is None:
+            print("Set the QUICKTESS_DIR environment variable to path to\
+                   the downloaded data")
+            return
+    local_directory = os.path.join(savedir, f'{TIC}_tglc/')
     os.makedirs(local_directory, exist_ok=True)
 
     kwargs.setdefault('size', 90)
