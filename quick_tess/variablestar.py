@@ -673,11 +673,11 @@ class VariableStar:
             return plotutils.plt_return(created_fig, fig, ax, savefig)
 
     #manual outlier rejection
-    def manual_clip(self, npoints=1, clip_bright=False, clip_faint=False, timeout=30):
+    def manual_clip(self, npoints=1, clip_bright=False, clip_faint=False, timeout=30, yvals='mag'):
 
         fig, ax, created_fig = plotutils.fig_init()
 
-        ax.scatter(self.df.phase, self.df.mag, color=self.scatter_color)
+        ax.scatter(self.df.phase, self.df[yvals], color=self.scatter_color)
         ax.set_xlabel('Phase', fontsize=20)
         ax.set_ylabel('Mag', fontsize=20)
         ax.set_title("Clipping Points Manually", color='red', fontsize=15)
@@ -690,7 +690,7 @@ class VariableStar:
         matched_indicies = []
         for s in selected:
 
-            distances = np.sqrt(np.power(s[0]-self.df.phase, 2)+np.power(s[1]-self.df.mag,2))
+            distances = np.sqrt(np.power(s[0]-self.df.phase, 2)+np.power(s[1]-self.df[yvals],2))
             matched_idx = np.where(distances == min(distances))[0][0]
             matched_indicies.append(matched_idx)
 
